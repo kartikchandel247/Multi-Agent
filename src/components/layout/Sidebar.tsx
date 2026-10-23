@@ -6,13 +6,13 @@ import {
   LayoutDashboard,
   CalendarDays,
   FileClock,
-  Database,
+  SlidersHorizontal,
   Sparkles,
   Bot,
   ShieldCheck,
   Cpu,
   ChevronRight,
-  ExternalLink,
+  Zap,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAgentBooking } from "@/context/AgentContext";
@@ -47,7 +47,7 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
       id: "calendar",
       label: "Dynamic Calendar",
       icon: <CalendarDays className="w-4 h-4" />,
-      badge: `${bookings.filter((b) => b.status === "CONFIRMED").length} Active`,
+      badge: `${bookings.filter((b) => b.status === "CONFIRMED").length} Live`,
     },
     {
       id: "audit",
@@ -56,17 +56,17 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
     },
     {
       id: "database",
-      label: "MongoDB Connection",
-      icon: <Database className="w-4 h-4" />,
-      badge: "Mongoose",
+      label: "Settings & API Keys",
+      icon: <SlidersHorizontal className="w-4 h-4" />,
+      badge: "Config",
     },
   ];
 
   const agents = [
-    { name: "Nova", role: "Front-Desk", color: "bg-blue-500", icon: <Sparkles className="w-3 h-3 text-blue-500" /> },
-    { name: "Atlas", role: "Calendar Optimizer", color: "bg-emerald-500", icon: <Cpu className="w-3 h-3 text-emerald-500" /> },
-    { name: "Vera", role: "Policy & Audit", color: "bg-purple-500", icon: <ShieldCheck className="w-3 h-3 text-purple-500" /> },
-    { name: "Nexus", role: "Business Analytics", color: "bg-amber-500", icon: <Bot className="w-3 h-3 text-amber-500" /> },
+    { name: "Nova", role: "Front-Desk AI", icon: <Sparkles className="w-3.5 h-3.5 text-blue-500" /> },
+    { name: "Atlas", role: "Calendar Engine", icon: <Cpu className="w-3.5 h-3.5 text-emerald-500" /> },
+    { name: "Vera", role: "Compliance Guardian", icon: <ShieldCheck className="w-3.5 h-3.5 text-purple-500" /> },
+    { name: "Nexus", role: "Business Analytics", icon: <Bot className="w-3.5 h-3.5 text-amber-500" /> },
   ];
 
   return (
@@ -75,25 +75,25 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
       {isOpenMobile && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/25 backdrop-blur-sm z-40 lg:hidden"
         />
       )}
 
       <aside
         className={clsx(
-          "fixed top-0 bottom-0 left-0 z-40 w-64 md:w-72 bg-white/80 backdrop-blur-xl border-r border-slate-200/80 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-transform duration-300 lg:translate-x-0 p-5",
+          "fixed top-0 bottom-0 left-0 z-40 w-64 md:w-72 bg-white/45 backdrop-blur-2xl border-r border-white/70 shadow-[10px_0_40px_rgba(31,38,135,0.06),0_0_0_1px_rgba(255,255,255,0.8)_inset] flex flex-col justify-between transition-transform duration-300 lg:translate-x-0 p-5",
           isOpenMobile ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div>
           {/* Brand header */}
-          <div className="pb-6 border-b border-slate-100 flex items-center justify-between">
+          <div className="pb-6 border-b border-white/60 flex items-center justify-between">
             <Logo />
           </div>
 
           {/* Navigation Section */}
           <div className="mt-6">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2">
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 px-3.5 mb-2.5">
               System Modules
             </p>
             <nav className="space-y-1.5">
@@ -107,17 +107,17 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
                       onCloseMobile();
                     }}
                     className={clsx(
-                      "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative",
+                      "w-full flex items-center justify-between px-4 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-250 group cursor-pointer",
                       isActive
-                        ? "bg-gradient-to-r from-blue-50 to-indigo-50/70 text-blue-700 font-semibold shadow-xs border border-blue-200/50"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
+                        ? "bg-gradient-to-r from-blue-600/15 via-indigo-600/15 to-violet-600/15 backdrop-blur-xl text-blue-700 border border-blue-400/40 shadow-[0_4px_16px_rgba(99,102,241,0.08)]"
+                        : "text-slate-600 hover:text-slate-900 bg-transparent hover:bg-white/50 backdrop-blur-sm border border-transparent hover:border-white/60 shadow-none hover:shadow-xs"
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <span
                         className={clsx(
-                          "transition-colors",
-                          isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"
+                          "transition-transform duration-200 group-hover:scale-110",
+                          isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-700"
                         )}
                       >
                         {item.icon}
@@ -129,10 +129,10 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
                       {item.badge && (
                         <span
                           className={clsx(
-                            "text-[10px] px-2 py-0.5 rounded-full font-semibold",
+                            "text-[10px] px-2 py-0.5 rounded-full font-bold transition-all",
                             isActive
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"
+                              ? "bg-blue-600 text-white shadow-xs"
+                              : "bg-white/60 text-slate-500 border border-white/80 group-hover:bg-white"
                           )}
                         >
                           {item.badge}
@@ -147,16 +147,16 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
           </div>
         </div>
 
-        {/* Multi-Agent Constellation Status */}
-        <div className="pt-4 border-t border-slate-100 space-y-4">
-          <div className="rounded-2xl p-3.5 bg-slate-50/80 border border-slate-200/60">
+        {/* Multi-Agent Constellation Card */}
+        <div className="pt-4 border-t border-white/60 space-y-3.5">
+          <div className="rounded-2xl p-3.5 bg-white/40 backdrop-blur-xl border border-white/70 shadow-[0_4px_15px_rgba(0,0,0,0.02)]">
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                 Autonomous Agents
               </span>
-              <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-100/60 px-1.5 py-0.5 rounded">
-                4 Active
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100/70 border border-emerald-300/50 px-2 py-0.5 rounded-full">
+                4 Online
               </span>
             </div>
 
@@ -164,30 +164,29 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
               {agents.map((ag) => (
                 <div
                   key={ag.name}
-                  className="p-1.5 rounded-lg bg-white border border-slate-200/50 flex items-center gap-2 shadow-2xs"
+                  className="p-2 rounded-xl bg-white/60 backdrop-blur-md border border-white/80 flex items-center gap-2 shadow-2xs hover:bg-white/80 transition-all cursor-default"
                 >
                   <div className="shrink-0">{ag.icon}</div>
                   <div className="overflow-hidden">
-                    <p className="text-xs font-semibold text-slate-800 leading-tight truncate">
+                    <p className="text-xs font-bold text-slate-800 leading-tight truncate">
                       {ag.name}
                     </p>
-                    <p className="text-[9px] text-slate-400 truncate">{ag.role}</p>
+                    <p className="text-[9px] text-slate-400 font-medium truncate">{ag.role}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Quick MongoDB Status footer */}
-          <div className="px-2 flex items-center justify-between text-[11px] text-slate-400">
+          {/* Clean system status footer */}
+          <div className="px-2 flex items-center justify-between text-[11px] text-slate-400 font-medium">
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              mockMongo v1.0
+              <Zap className="w-3 h-3 text-amber-500" />
+              Neural Mesh v2.4
             </span>
-            <span className="text-slate-500 hover:text-blue-600 cursor-pointer font-medium flex items-center gap-0.5"
-              onClick={() => onTabChange("database")}
-            >
-              Schema <ExternalLink className="w-2.5 h-2.5" />
+            <span className="text-emerald-600 font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              99.98% Latency
             </span>
           </div>
         </div>

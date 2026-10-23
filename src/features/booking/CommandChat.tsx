@@ -9,10 +9,8 @@ import {
   Clock,
   AlertTriangle,
   RotateCcw,
-  Terminal,
   Zap,
 } from "lucide-react";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { AgentBadge } from "@/components/ui/Badge";
 import { CommandVisualizer } from "./CommandVisualizer";
@@ -37,7 +35,7 @@ export function CommandChat() {
       id: "m-2",
       sender: "system",
       content:
-        "💡 Multi-Agent System Online. You can type commands in natural language or click quick action prompts below.",
+        "⚡ Multi-Agent System Online. You can type commands in natural language or click quick action prompts below.",
       timestamp: "Just now",
     },
   ]);
@@ -53,10 +51,10 @@ export function CommandChat() {
   }, [messages, isTyping]);
 
   const promptShortcuts = [
-    { label: "Book a slot for tomorrow at 10:00 AM", intent: "book", icon: <Calendar className="w-3.5 h-3.5 text-blue-500" /> },
-    { label: "Postpone my booking to Friday at 02:30 PM", intent: "postpone", icon: <RotateCcw className="w-3.5 h-3.5 text-indigo-500" /> },
-    { label: "Cancel my booking", intent: "cancel", icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> },
-    { label: "Show team availability and active slots", intent: "query", icon: <Clock className="w-3.5 h-3.5 text-emerald-500" /> },
+    { label: "Book a slot for tomorrow at 10:00 AM", icon: <Calendar className="w-3.5 h-3.5 text-blue-500" /> },
+    { label: "Postpone my booking to Friday at 02:30 PM", icon: <RotateCcw className="w-3.5 h-3.5 text-indigo-500" /> },
+    { label: "Cancel my booking", icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> },
+    { label: "Show team availability and active slots", icon: <Clock className="w-3.5 h-3.5 text-emerald-500" /> },
   ];
 
   const handleSend = async (textToSend?: string) => {
@@ -66,7 +64,7 @@ export function CommandChat() {
     setInput("");
 
     // 1. Add user message
-    const userMsgId = "usr-" + Date.now();
+    const userMsgId = "usr-" + Math.random().toString(36).substring(2, 9);
     const newUserMsg: ChatMessage = {
       id: userMsgId,
       sender: "user",
@@ -81,12 +79,11 @@ export function CommandChat() {
       // 2. Run command via context orchestrator
       const { parsed } = await runCommand(commandText);
 
-      // Simulate multi-agent processing delay for realistic fluid feel
       setTimeout(() => {
         setIsTyping(false);
 
         const agentMsg: ChatMessage = {
-          id: "agt-" + Date.now(),
+          id: "agt-" + Math.random().toString(36).substring(2, 9),
           sender: "agent",
           agentName: parsed.agent,
           content: parsed.suggestedResponse,
@@ -95,7 +92,7 @@ export function CommandChat() {
         };
 
         setMessages((prev) => [...prev, agentMsg]);
-      }, 600);
+      }, 500);
     } catch (err) {
       setIsTyping(false);
       console.error(err);
@@ -111,13 +108,13 @@ export function CommandChat() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
-      {/* Top Agent Status Banner */}
-      <div className="p-3.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/90 shadow-xs flex items-center justify-between flex-wrap gap-2 text-xs text-slate-600">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-blue-600" />
-          <span className="font-semibold text-slate-800">Autonomous Command Mesh</span>
-          <span className="text-slate-400">&bull;</span>
-          <span className="text-slate-500 hidden sm:inline">Natural Language Intent Parser with Mongoose DB Emulation</span>
+      {/* Top Floating Glass Status Banner */}
+      <div className="p-3.5 px-5 rounded-3xl bg-white/40 backdrop-blur-2xl border border-white/70 shadow-[0_10px_30px_-10px_rgba(31,38,135,0.06)] flex items-center justify-between flex-wrap gap-2 text-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+          <span className="font-bold text-slate-800 tracking-tight">Autonomous Neural Command Mesh</span>
+          <span className="text-slate-300">&bull;</span>
+          <span className="text-slate-500 hidden sm:inline font-medium">Multi-Agent Intent Extractor & Reactive Calendar</span>
         </div>
         <div className="flex items-center gap-2">
           <AgentBadge agent="Nova" showIcon={false} />
@@ -126,9 +123,12 @@ export function CommandChat() {
         </div>
       </div>
 
-      {/* Main Glass Chat Thread */}
-      <GlassCard className="min-h-[460px] md:min-h-[520px] max-h-[620px] flex flex-col justify-between p-4 sm:p-6 shadow-sm border-white/90">
-        {/* Messages Scroll Area */}
+      {/* Main Frosted Glass Terminal Card */}
+      <div className="rounded-3xl bg-white/45 backdrop-blur-2xl border border-white/70 shadow-[0_20px_50px_-15px_rgba(31,38,135,0.08),0_0_0_1px_rgba(255,255,255,0.85)_inset] min-h-[480px] md:min-h-[540px] max-h-[620px] flex flex-col justify-between p-5 sm:p-7 relative overflow-hidden">
+        {/* Top glossy glare line */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+
+        {/* Messages Thread */}
         <div className="overflow-y-auto space-y-4 pr-1 sm:pr-2 flex-1 pb-4">
           <AnimatePresence initial={false}>
             {messages.map((msg) => {
@@ -141,7 +141,7 @@ export function CommandChat() {
                     key={msg.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 rounded-xl bg-blue-50/60 border border-blue-200/50 text-xs text-blue-900 text-center font-medium my-2"
+                    className="p-3 px-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/70 text-xs text-indigo-900 text-center font-semibold my-2 shadow-2xs"
                   >
                     {msg.content}
                   </motion.div>
@@ -156,22 +156,22 @@ export function CommandChat() {
                   transition={{ duration: 0.25 }}
                   className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1.5 px-1">
                     {!isUser && msg.agentName && <AgentBadge agent={msg.agentName} />}
-                    {isUser && <span className="text-xs font-semibold text-slate-600">You</span>}
-                    <span className="text-[10px] text-slate-400">{msg.timestamp}</span>
+                    {isUser && <span className="text-xs font-bold text-slate-700">You</span>}
+                    <span className="text-[10px] text-slate-400 font-medium">{msg.timestamp}</span>
                   </div>
 
                   <div
-                    className={`max-w-[85%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-2xs ${
+                    className={`max-w-[85%] sm:max-w-[78%] rounded-3xl px-5 py-3.5 text-sm leading-relaxed ${
                       isUser
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-xs"
-                        : "bg-white/90 backdrop-blur-md border border-slate-200/80 text-slate-800 rounded-tl-xs"
+                        ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white rounded-tr-xs shadow-[0_10px_25px_-5px_rgba(79,70,229,0.35),0_0_0_1px_rgba(255,255,255,0.3)_inset]"
+                        : "bg-white/70 backdrop-blur-xl border border-white/85 text-slate-800 rounded-tl-xs shadow-[0_8px_20px_rgba(0,0,0,0.03),0_0_0_1px_rgba(255,255,255,0.9)_inset]"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <p className="whitespace-pre-wrap font-medium">{msg.content}</p>
 
-                    {/* If this message contains parsed command data, visually render entity tokens */}
+                    {/* Parsed visual entity badges */}
                     {msg.parsedCommand && (
                       <CommandVisualizer
                         parsed={msg.parsedCommand}
@@ -193,14 +193,14 @@ export function CommandChat() {
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-2 text-xs text-slate-500 p-2"
             >
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+              <div className="w-6 h-6 rounded-full bg-blue-500/10 backdrop-blur-md border border-blue-400/30 flex items-center justify-center text-blue-600">
                 <Sparkles className="w-3.5 h-3.5 animate-spin" />
               </div>
-              <span className="font-medium">Multi-Agents synthesizing command & schema...</span>
+              <span className="font-semibold text-slate-600">Multi-Agents synthesizing response...</span>
               <div className="flex gap-1 ml-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" />
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:0.4s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce [animation-delay:0.4s]" />
               </div>
             </motion.div>
           )}
@@ -208,18 +208,20 @@ export function CommandChat() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Actionable Prompt Shortcuts */}
-        <div className="pt-3 border-t border-slate-100 space-y-2.5">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        {/* Actionable Prompt Shortcuts & Translucent Glass Input */}
+        <div className="pt-3 border-t border-white/60 space-y-3">
+          <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
             <Zap className="w-3 h-3 text-amber-500" />
             Quick Actionable Prompts:
           </div>
+
+          {/* Translucent Glass Pill Buttons */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
             {promptShortcuts.map((shortcut, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(shortcut.label)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-blue-50 hover:border-blue-300 text-slate-600 hover:text-blue-700 text-xs font-medium border border-slate-200/80 transition-all shrink-0 cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white/40 hover:bg-white/80 backdrop-blur-xl text-slate-700 hover:text-indigo-900 text-xs font-semibold border border-white/75 hover:border-indigo-300/60 shadow-2xs hover:shadow-md transition-all shrink-0 cursor-pointer"
               >
                 {shortcut.icon}
                 <span>{shortcut.label}</span>
@@ -227,7 +229,7 @@ export function CommandChat() {
             ))}
           </div>
 
-          {/* Input Bar */}
+          {/* Glass Input Bar */}
           <div className="relative flex items-center gap-2 pt-1">
             <div className="relative flex-1">
               <input
@@ -235,10 +237,10 @@ export function CommandChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type command: e.g. 'Book a slot for Friday at 11am', 'Postpone to Monday', 'Cancel'..."
-                className="w-full rounded-2xl bg-white/90 border border-slate-200/90 pl-4 pr-10 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 shadow-xs"
+                placeholder="Type command: 'Book a slot for Friday at 11am', 'Postpone to Monday', 'Cancel'..."
+                className="w-full rounded-2xl bg-white/50 backdrop-blur-xl border border-white/80 pl-5 pr-14 py-3.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white/85 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/15 shadow-[0_4px_16px_rgba(0,0,0,0.02)_inset] transition-all"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 hidden sm:inline">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono font-bold text-slate-400 bg-white/70 px-2 py-0.5 rounded-lg border border-white/80 hidden sm:inline">
                 Enter
               </span>
             </div>
@@ -249,13 +251,13 @@ export function CommandChat() {
               onClick={() => handleSend()}
               disabled={!input.trim() || isTyping}
               icon={<Send className="w-4 h-4" />}
-              className="rounded-2xl px-5 py-3 shadow-md shadow-blue-500/25"
+              className="rounded-2xl px-6 py-3.5 shadow-[0_10px_25px_-4px_rgba(79,70,229,0.45)] font-bold shrink-0"
             >
               <span className="hidden sm:inline">Send Command</span>
             </Button>
           </div>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 }

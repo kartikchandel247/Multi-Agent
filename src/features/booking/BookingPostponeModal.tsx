@@ -5,7 +5,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { AgentBadge } from "@/components/ui/Badge";
 import { useAgentBooking } from "@/context/AgentContext";
-import { Calendar, Clock, RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 
 export function BookingPostponeModal() {
   const {
@@ -79,13 +79,13 @@ export function BookingPostponeModal() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Booking selector */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+          <label className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
             Select Active Appointment
           </label>
           <select
             value={selectedBookingId}
             onChange={(e) => setSelectedBookingId(e.target.value)}
-            className="w-full rounded-xl bg-white/80 border border-slate-200/80 px-4 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full rounded-2xl bg-white/50 backdrop-blur-xl border border-white/80 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white/80 focus:ring-4 focus:ring-blue-500/15 focus:border-blue-400"
           >
             {activeBookings.map((b) => (
               <option key={b._id} value={b._id}>
@@ -96,10 +96,10 @@ export function BookingPostponeModal() {
         </div>
 
         {targetBooking && (
-          <div className="p-3 rounded-xl bg-indigo-50/60 border border-indigo-200/60 text-xs text-indigo-900 flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-400/30 text-xs text-indigo-950 flex items-center justify-between backdrop-blur-md">
             <div>
-              <span className="text-[10px] uppercase font-bold text-indigo-500 block">Current Schedule</span>
-              <p className="font-semibold">{targetBooking.date} at {targetBooking.timeSlot}</p>
+              <span className="text-[10px] uppercase font-bold text-indigo-600 block tracking-wider">Current Schedule</span>
+              <p className="font-extrabold">{targetBooking.date} at {targetBooking.timeSlot}</p>
             </div>
             <RefreshCw className="w-4 h-4 text-indigo-500 animate-spin" style={{ animationDuration: "6s" }} />
           </div>
@@ -108,7 +108,7 @@ export function BookingPostponeModal() {
         {/* New Date and Time */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
               Target New Date
             </label>
             <input
@@ -116,18 +116,18 @@ export function BookingPostponeModal() {
               required
               value={newDate}
               onChange={(e) => setNewDate(e.target.value)}
-              className="w-full rounded-xl bg-white/80 border border-slate-200/80 px-4 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full rounded-2xl bg-white/50 backdrop-blur-xl border border-white/80 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white/80 focus:ring-4 focus:ring-blue-500/15 focus:border-blue-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
               Target Time Slot
             </label>
             <select
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="w-full rounded-xl bg-white/80 border border-slate-200/80 px-4 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full rounded-2xl bg-white/50 backdrop-blur-xl border border-white/80 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white/80 focus:ring-4 focus:ring-blue-500/15 focus:border-blue-400"
             >
               {timeOptions.map((t) => (
                 <option key={t} value={t}>
@@ -139,11 +139,11 @@ export function BookingPostponeModal() {
         </div>
 
         {/* Atlas confirmation note */}
-        <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200/70 text-xs text-emerald-800 flex items-start gap-2">
+        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs text-emerald-950 flex items-start gap-2.5 backdrop-blur-md">
           <AlertCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-          <p>
+          <p className="font-medium">
             Atlas verified zero double-booking conflicts on <strong>{newDate || "selected date"}</strong>.
-            The MongoDB record will be tagged with status <code>RESCHEDULED</code> and historical linkage.
+            The appointment will be rescheduled immediately across team calendars.
           </p>
         </div>
 
@@ -154,6 +154,7 @@ export function BookingPostponeModal() {
             size="md"
             onClick={() => setIsPostponeModalOpen(false)}
             disabled={isSubmitting}
+            className="rounded-2xl"
           >
             Cancel
           </Button>
@@ -163,6 +164,7 @@ export function BookingPostponeModal() {
             size="md"
             isLoading={isSubmitting}
             icon={<RefreshCw className="w-4 h-4" />}
+            className="rounded-2xl shadow-[0_10px_25px_-4px_rgba(139,92,246,0.45)]"
           >
             Apply Postponement
           </Button>

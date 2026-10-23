@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AgentBadge } from "@/components/ui/Badge";
 import { useAgentBooking } from "@/context/AgentContext";
-import { Calendar, Clock, DollarSign, User, Mail, Sparkles, Check } from "lucide-react";
+import { User, Mail, Sparkles, Check } from "lucide-react";
 
 export function BookingConfirmModal() {
   const { isBookModalOpen, setIsBookModalOpen, pendingBooking, createBooking } = useAgentBooking();
@@ -81,13 +81,13 @@ export function BookingConfirmModal() {
           <AgentBadge agent="Nova" />
         </div>
       }
-      subtitle="Agent Nova parsed your request. Review the session specs and confirm to persist in MongoDB."
+      subtitle="Agent Nova parsed your request. Review the session specs and confirm appointment."
       maxWidth="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Service Selector Chips */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
+          <label className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 mb-2">
             Select Consultation Track
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -98,15 +98,15 @@ export function BookingConfirmModal() {
                   type="button"
                   key={item.name}
                   onClick={() => setServiceType(item.name)}
-                  className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between cursor-pointer ${
                     isSelected
-                      ? "bg-blue-50/80 border-blue-400 text-blue-900 shadow-xs"
-                      : "bg-white/60 border-slate-200/80 text-slate-700 hover:bg-slate-50"
+                      ? "bg-gradient-to-br from-blue-500/15 via-white/70 to-indigo-500/15 border-blue-400 shadow-md shadow-blue-500/10 text-blue-900"
+                      : "bg-white/40 hover:bg-white/70 backdrop-blur-md border-white/80 text-slate-700"
                   }`}
                 >
                   <div>
                     <p className="text-xs font-bold leading-tight">{item.name}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{item.duration}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">{item.duration}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-extrabold text-blue-600">${item.price}</p>
@@ -121,28 +121,26 @@ export function BookingConfirmModal() {
         {/* Date & Time Slot */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
               Appointment Date
             </label>
-            <div className="relative">
-              <input
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-xl bg-white/80 border border-slate-200/80 px-4 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              />
-            </div>
+            <input
+              type="date"
+              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-2xl bg-white/50 backdrop-blur-xl border border-white/80 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white/80 focus:ring-4 focus:ring-blue-500/15 focus:border-blue-400"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
               Preferred Time Slot
             </label>
             <select
               value={timeSlot}
               onChange={(e) => setTimeSlot(e.target.value)}
-              className="w-full rounded-xl bg-white/80 border border-slate-200/80 px-4 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full rounded-2xl bg-white/50 backdrop-blur-xl border border-white/80 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white/80 focus:ring-4 focus:ring-blue-500/15 focus:border-blue-400"
             >
               {timeOptions.map((t) => (
                 <option key={t} value={t}>
@@ -176,7 +174,7 @@ export function BookingConfirmModal() {
 
         {/* Notes */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+          <label className="block text-[11px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
             Mission Directives & Context Notes
           </label>
           <textarea
@@ -184,19 +182,19 @@ export function BookingConfirmModal() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Provide architectural goals or topic requests..."
-            className="w-full rounded-xl bg-white/80 border border-slate-200/80 px-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full rounded-2xl bg-white/50 backdrop-blur-xl border border-white/80 px-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white/80 focus:ring-4 focus:ring-blue-500/15 focus:border-blue-400 font-medium"
           />
         </div>
 
         {/* Summary Footer */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center justify-between flex-wrap gap-2 text-xs">
+        <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/70 flex items-center justify-between flex-wrap gap-2 text-xs shadow-2xs">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-blue-500" />
-            <span className="text-slate-600">
-              Synchronizing with <strong>Atlas Resource Engine</strong> & <strong>MongoDB</strong>
+            <span className="text-slate-600 font-medium">
+              Synchronizing with <strong>Atlas Resource Engine</strong>
             </span>
           </div>
-          <div className="font-bold text-slate-800 text-sm">
+          <div className="font-extrabold text-slate-900 text-sm">
             Total: <span className="text-blue-600">${currentService.price}</span>
           </div>
         </div>
@@ -209,6 +207,7 @@ export function BookingConfirmModal() {
             size="md"
             onClick={() => setIsBookModalOpen(false)}
             disabled={isSubmitting}
+            className="rounded-2xl"
           >
             Cancel
           </Button>
@@ -218,8 +217,9 @@ export function BookingConfirmModal() {
             size="md"
             isLoading={isSubmitting}
             icon={<Check className="w-4 h-4" />}
+            className="rounded-2xl shadow-[0_10px_25px_-4px_rgba(79,70,229,0.45)]"
           >
-            Confirm & Save to MongoDB
+            Confirm Reservation
           </Button>
         </div>
       </form>

@@ -12,10 +12,7 @@ import {
   Check,
   Server,
   Layers,
-  Sparkles,
   RefreshCw,
-  CheckCircle2,
-  AlertTriangle,
 } from "lucide-react";
 
 export function MongoSchemaManager() {
@@ -35,15 +32,15 @@ export function MongoSchemaManager() {
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
-  const schemaSnippet = `// Mongoose Schema Definition: src/models/Booking.ts
+  const schemaSnippet = `// Production Schema: src/models/Booking.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IBookingDocument extends Document {
   clientName: string;
   clientEmail: string;
   serviceType: string;
-  date: string; // YYYY-MM-DD
-  timeSlot: string; // "10:00 AM"
+  date: string;
+  timeSlot: string;
   status: "CONFIRMED" | "PENDING" | "CANCELLED" | "RESCHEDULED";
   amount: number;
   agentAssigned: "Nova" | "Atlas" | "Vera" | "Nexus";
@@ -93,27 +90,27 @@ JWT_SECRET="aura_agent_super_secret_jwt_key_928374982374"`;
   return (
     <div className="space-y-6">
       {/* Live Backend Diagnostic Banner */}
-      <GlassCard className="p-5 border-blue-200/80 shadow-md">
+      <GlassCard className="p-6 border-blue-300/60 shadow-lg">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex items-start gap-3.5">
-            <div className={`p-3 rounded-2xl ${isLiveMongo ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-blue-50 text-blue-600 border border-blue-200"}`}>
+            <div className={`p-3.5 rounded-2xl ${isLiveMongo ? "bg-emerald-500/15 text-emerald-700 border border-emerald-400/40" : "bg-blue-500/15 text-blue-700 border border-blue-400/40"} backdrop-blur-md shadow-md`}>
               <Database className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                  Backend Database Connection Status
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                  Backend Architecture & Cloud Database Settings
                 </h3>
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold border backdrop-blur-md ${
                   isLiveMongo
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                    : "bg-blue-50 text-blue-700 border-blue-300"
+                    ? "bg-emerald-500/15 text-emerald-800 border-emerald-400/40"
+                    : "bg-blue-500/15 text-blue-800 border-blue-400/40"
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${isLiveMongo ? "bg-emerald-500" : "bg-blue-500"} animate-pulse`} />
-                  {isLiveMongo ? "CONNECTED: LIVE MONGODB ATLAS" : "CONNECTED: SIMULATED MONGOOSE ENGINE"}
+                  {isLiveMongo ? "CONNECTED: LIVE MONGODB ATLAS" : "CONNECTED: IN-MEMORY ENGINE"}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+              <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed font-medium">
                 {dbStatus?.message || "Operating on unified Database Adapter layer. REST API endpoints (/api/bookings, /api/stats, /api/command) are active."}
               </p>
             </div>
@@ -126,36 +123,36 @@ JWT_SECRET="aura_agent_super_secret_jwt_key_928374982374"`;
               onClick={handleTestConnection}
               isLoading={isRefreshing}
               icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />}
-              className="text-xs"
+              className="text-xs rounded-xl"
             >
-              Ping / Test Connection
+              Ping Server
             </Button>
-            <Button variant="outline" size="sm" onClick={resetToDefault} className="text-xs">
-              Reset In-Memory DB
+            <Button variant="outline" size="sm" onClick={resetToDefault} className="text-xs rounded-xl">
+              Reset Data
             </Button>
           </div>
         </div>
 
         {/* Diagnostic Meta Grid */}
-        <div className="mt-4 pt-3.5 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Connection URI</span>
-            <span className="font-mono text-slate-700 truncate block mt-0.5">{dbStatus?.maskedUri || "mongodb+srv://***:***@cluster0.mongodb.net"}</span>
+        <div className="mt-4 pt-3.5 border-t border-white/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/70 shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Connection URI</span>
+            <span className="font-mono text-slate-800 truncate block mt-0.5 font-semibold">{dbStatus?.maskedUri || "mongodb+srv://***:***@cluster0.mongodb.net"}</span>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Database</span>
-            <span className="font-semibold text-slate-800 block mt-0.5">{dbStatus?.databaseName || "multi_agent_db"}</span>
+          <div className="p-3 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/70 shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Database Name</span>
+            <span className="font-bold text-slate-800 block mt-0.5">{dbStatus?.databaseName || "multi_agent_db"}</span>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Bookings Count</span>
-            <span className="font-semibold text-blue-600 block mt-0.5">{bookings.length} Documents</span>
+          <div className="p-3 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/70 shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Active Bookings</span>
+            <span className="font-extrabold text-blue-600 block mt-0.5">{bookings.length} Documents</span>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Audit Log Trail</span>
-            <span className="font-semibold text-purple-600 block mt-0.5">{auditLogs.length} Records</span>
+          <div className="p-3 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/70 shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Audit Log Trail</span>
+            <span className="font-extrabold text-purple-600 block mt-0.5">{auditLogs.length} Records</span>
           </div>
         </div>
       </GlassCard>
@@ -163,29 +160,29 @@ JWT_SECRET="aura_agent_super_secret_jwt_key_928374982374"`;
       {/* Code snippets grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Mongoose Schema */}
-        <GlassCard className="p-5 space-y-3">
+        <GlassCard className="p-6 space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600">
               <Code2 className="w-4 h-4 text-blue-600" />
-              Booking Schema (Mongoose Model in src/models/Booking.ts)
+              Mongoose Model (src/models/Booking.ts)
             </div>
             <button
               onClick={() => copyToClipboard(schemaSnippet, "schema")}
-              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold cursor-pointer"
+              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-bold cursor-pointer"
             >
               {copiedKey === "schema" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               {copiedKey === "schema" ? "Copied!" : "Copy Code"}
             </button>
           </div>
 
-          <pre className="p-3.5 rounded-xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto leading-relaxed max-h-[360px]">
+          <pre className="p-4 rounded-2xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto leading-relaxed max-h-[360px] shadow-inner">
             <code>{schemaSnippet}</code>
           </pre>
         </GlassCard>
 
         {/* Environment File & Quick Setup Guide */}
         <div className="space-y-5">
-          <GlassCard className="p-5 space-y-3">
+          <GlassCard className="p-6 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600">
                 <FileCode className="w-4 h-4 text-emerald-600" />
@@ -193,25 +190,25 @@ JWT_SECRET="aura_agent_super_secret_jwt_key_928374982374"`;
               </div>
               <button
                 onClick={() => copyToClipboard(envSnippet, "env")}
-                className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1 font-semibold cursor-pointer"
+                className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1 font-bold cursor-pointer"
               >
                 {copiedKey === "env" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copiedKey === "env" ? "Copied!" : "Copy .env"}
               </button>
             </div>
 
-            <pre className="p-3.5 rounded-xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto leading-relaxed">
+            <pre className="p-4 rounded-2xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto leading-relaxed shadow-inner">
               <code>{envSnippet}</code>
             </pre>
           </GlassCard>
 
           {/* Quick Migration Steps */}
-          <GlassCard className="p-5 space-y-3">
-            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <GlassCard className="p-6 space-y-3">
+            <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
               <Server className="w-4 h-4 text-purple-600" />
-              How to Connect Your MongoDB Database in 2 Steps:
+              How to Connect Real MongoDB in 2 Steps:
             </h4>
-            <ol className="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
+            <ol className="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed font-medium">
               <li>
                 <strong>Update .env:</strong> In your <code>.env</code> file, paste your real connection URI (e.g. <code>mongodb+srv://myuser:mypassword@cluster0.mongodb.net/multi_agent_db</code>) and set <code>USE_REAL_MONGODB=&quot;true&quot;</code>.
               </li>
@@ -224,22 +221,22 @@ JWT_SECRET="aura_agent_super_secret_jwt_key_928374982374"`;
       </div>
 
       {/* Live Documents Inspector */}
-      <GlassCard className="p-5 space-y-3">
+      <GlassCard className="p-6 space-y-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600">
             <Layers className="w-4 h-4 text-blue-600" />
             Live Database Documents ({bookings.length} Bookings, {auditLogs.length} Audit Records)
           </div>
-          <span className="text-[11px] text-slate-400">Synchronized via REST API endpoints</span>
+          <span className="text-[11px] text-slate-400 font-medium">Synchronized via REST API endpoints</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[10px] max-h-48 overflow-y-auto">
+          <div className="p-3.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/70 font-mono text-[10px] max-h-48 overflow-y-auto shadow-inner">
             <p className="font-bold text-slate-700 mb-1 text-xs font-sans">{"// db.bookings.find().limit(3)"}</p>
             <pre>{JSON.stringify(bookings.slice(0, 3), null, 2)}</pre>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[10px] max-h-48 overflow-y-auto">
+          <div className="p-3.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/70 font-mono text-[10px] max-h-48 overflow-y-auto shadow-inner">
             <p className="font-bold text-slate-700 mb-1 text-xs font-sans">{"// db.audit_logs.find().limit(2)"}</p>
             <pre>{JSON.stringify(auditLogs.slice(0, 2), null, 2)}</pre>
           </div>

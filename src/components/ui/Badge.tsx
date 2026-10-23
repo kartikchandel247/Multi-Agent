@@ -11,23 +11,23 @@ interface StatusBadgeProps {
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const styles: Record<BookingStatus, { bg: string; dot: string; label: string }> = {
     CONFIRMED: {
-      bg: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
-      dot: "bg-emerald-500",
+      bg: "bg-emerald-500/10 text-emerald-800 border-emerald-400/40 shadow-2xs",
+      dot: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
       label: "Confirmed",
     },
     PENDING: {
-      bg: "bg-amber-50 text-amber-700 border-amber-200/80",
-      dot: "bg-amber-500",
+      bg: "bg-amber-500/10 text-amber-800 border-amber-400/40 shadow-2xs",
+      dot: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
       label: "Pending Review",
     },
     CANCELLED: {
-      bg: "bg-rose-50 text-rose-700 border-rose-200/80",
-      dot: "bg-rose-500",
+      bg: "bg-rose-500/10 text-rose-800 border-rose-400/40 shadow-2xs",
+      dot: "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]",
       label: "Cancelled",
     },
     RESCHEDULED: {
-      bg: "bg-indigo-50 text-indigo-700 border-indigo-200/80",
-      dot: "bg-indigo-500",
+      bg: "bg-indigo-500/10 text-indigo-800 border-indigo-400/40 shadow-2xs",
+      dot: "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]",
       label: "Rescheduled",
     },
   };
@@ -37,7 +37,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm",
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-md",
         current.bg,
         className
       )}
@@ -57,32 +57,32 @@ interface AgentBadgeProps {
 export function AgentBadge({ agent, showIcon = true, className }: AgentBadgeProps) {
   const agentConfig: Record<AgentPersona, { bg: string; text: string; border: string; icon: React.ReactNode; role: string }> = {
     Nova: {
-      bg: "bg-blue-50/90",
-      text: "text-blue-700",
-      border: "border-blue-200",
+      bg: "bg-blue-500/10",
+      text: "text-blue-800",
+      border: "border-blue-400/40",
       icon: <Sparkles className="w-3.5 h-3.5 text-blue-600" />,
-      role: "Front-Desk AI",
+      role: "Front-Desk",
     },
     Atlas: {
-      bg: "bg-emerald-50/90",
-      text: "text-emerald-700",
-      border: "border-emerald-200",
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-800",
+      border: "border-emerald-400/40",
       icon: <Cpu className="w-3.5 h-3.5 text-emerald-600" />,
-      role: "Calendar Optimizer",
+      role: "Optimizer",
     },
     Vera: {
-      bg: "bg-purple-50/90",
-      text: "text-purple-700",
-      border: "border-purple-200",
+      bg: "bg-purple-500/10",
+      text: "text-purple-800",
+      border: "border-purple-400/40",
       icon: <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />,
-      role: "Policy & Audit",
+      role: "Compliance",
     },
     Nexus: {
-      bg: "bg-amber-50/90",
-      text: "text-amber-700",
-      border: "border-amber-200",
+      bg: "bg-amber-500/10",
+      text: "text-amber-800",
+      border: "border-amber-400/40",
       icon: <Bot className="w-3.5 h-3.5 text-amber-600" />,
-      role: "Business Analytics",
+      role: "Analytics",
     },
   };
 
@@ -91,7 +91,7 @@ export function AgentBadge({ agent, showIcon = true, className }: AgentBadgeProp
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border backdrop-blur-sm shadow-xs",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border backdrop-blur-md shadow-2xs",
         config.bg,
         config.text,
         config.border,
@@ -99,8 +99,8 @@ export function AgentBadge({ agent, showIcon = true, className }: AgentBadgeProp
       )}
     >
       {showIcon && config.icon}
-      <span className="font-semibold">Agent {agent}</span>
-      <span className="opacity-60 text-[10px] hidden sm:inline">({config.role})</span>
+      <span>Agent {agent}</span>
+      <span className="opacity-60 text-[10px] font-medium hidden sm:inline">({config.role})</span>
     </span>
   );
 }
