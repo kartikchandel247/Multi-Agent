@@ -213,7 +213,7 @@ JWT_SECRET="aura_agent_super_secret_jwt_key_928374982374"`;
             </h4>
             <ol className="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
               <li>
-                <strong>Update .env:</strong> In your <code>.env</code> file, paste your real connection URI (e.g. <code>mongodb+srv://myuser:mypassword@cluster0.mongodb.net/multi_agent_db</code>) and set <code>USE_REAL_MONGODB="true"</code>.
+                <strong>Update .env:</strong> In your <code>.env</code> file, paste your real connection URI (e.g. <code>mongodb+srv://myuser:mypassword@cluster0.mongodb.net/multi_agent_db</code>) and set <code>USE_REAL_MONGODB=&quot;true&quot;</code>.
               </li>
               <li>
                 <strong>Restart Dev Server:</strong> That&apos;s all! <code>mongoose</code> and <code>dbAdapter</code> are already installed and compiled. The application will immediately switch to live MongoDB Atlas without any extra code changes!
@@ -235,12 +235,12 @@ JWT_SECRET="aura_agent_super_secret_jwt_key_928374982374"`;
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[10px] max-h-48 overflow-y-auto">
-            <p className="font-bold text-slate-700 mb-1 text-xs font-sans">// db.bookings.find().limit(3)</p>
+            <p className="font-bold text-slate-700 mb-1 text-xs font-sans">{"// db.bookings.find().limit(3)"}</p>
             <pre>{JSON.stringify(bookings.slice(0, 3), null, 2)}</pre>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[10px] max-h-48 overflow-y-auto">
-            <p className="font-bold text-slate-700 mb-1 text-xs font-sans">// db.audit_logs.find().limit(2)</p>
+            <p className="font-bold text-slate-700 mb-1 text-xs font-sans">{"// db.audit_logs.find().limit(2)"}</p>
             <pre>{JSON.stringify(auditLogs.slice(0, 2), null, 2)}</pre>
           </div>
         </div>

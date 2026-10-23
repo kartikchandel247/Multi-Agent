@@ -5,10 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
   Sparkles,
-  Bot,
   Calendar,
   Clock,
-  CheckCircle2,
   AlertTriangle,
   RotateCcw,
   Terminal,
@@ -19,10 +17,10 @@ import { Button } from "@/components/ui/Button";
 import { AgentBadge } from "@/components/ui/Badge";
 import { CommandVisualizer } from "./CommandVisualizer";
 import { useAgentBooking } from "@/context/AgentContext";
-import { ChatMessage, AgentPersona, ParsedCommand } from "@/types";
+import { ChatMessage } from "@/types";
 
 export function CommandChat() {
-  const { runCommand, bookings } = useAgentBooking();
+  const { runCommand } = useAgentBooking();
 
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);

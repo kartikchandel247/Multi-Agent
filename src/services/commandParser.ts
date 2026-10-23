@@ -1,4 +1,4 @@
-import { CommandIntent, ParsedCommand, AgentPersona, Booking } from "@/types";
+import { ParsedCommand, Booking } from "@/types";
 
 // Helper to normalize and parse relative dates or explicit dates
 export function extractDateFromText(text: string): string {

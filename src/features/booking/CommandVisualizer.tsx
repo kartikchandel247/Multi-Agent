@@ -2,16 +2,15 @@
 
 import React from "react";
 import { ParsedCommand } from "@/types";
-import { Calendar, Clock, Sparkles, CheckCircle2, ShieldAlert } from "lucide-react";
+import { Calendar, Clock, Sparkles, CheckCircle2 } from "lucide-react";
 import { AgentBadge } from "@/components/ui/Badge";
 
 interface CommandVisualizerProps {
   parsed: ParsedCommand;
-  rawText?: string;
   onConfirmAction?: () => void;
 }
 
-export function CommandVisualizer({ parsed, rawText, onConfirmAction }: CommandVisualizerProps) {
+export function CommandVisualizer({ parsed, onConfirmAction }: CommandVisualizerProps) {
   const intentColors = {
     BOOK_SLOT: "bg-blue-50 text-blue-700 border-blue-200",
     POSTPONE_BOOKING: "bg-indigo-50 text-indigo-700 border-indigo-200",

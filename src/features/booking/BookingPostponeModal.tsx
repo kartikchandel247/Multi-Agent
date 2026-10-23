@@ -36,7 +36,7 @@ export function BookingPostponeModal() {
       nextDay.setDate(nextDay.getDate() + 4);
       setNewDate(nextDay.toISOString().split("T")[0]);
     }
-  }, [bookingToPostpone, activeBookings.length]);
+  }, [bookingToPostpone, activeBookings]);
 
   const targetBooking = bookings.find((b) => b._id === selectedBookingId);
 
