@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { mockMongo } from "@/services/mockMongo";
+import { dbAdapter } from "@/services/dbAdapter";
 
 export async function GET() {
   try {
-    const stats = await mockMongo.getBusinessStats();
+    const stats = await dbAdapter.getBusinessStats();
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
     return NextResponse.json(

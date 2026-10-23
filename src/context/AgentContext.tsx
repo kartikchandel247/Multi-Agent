@@ -6,6 +6,19 @@ import { mockMongo } from "@/services/mockMongo";
 import { parseUserCommand } from "@/services/commandParser";
 import confetti from "canvas-confetti";
 
+export interface DbStatusState {
+  isConnected: boolean;
+  mode: "REAL_MONGODB" | "SIMULATED_MONGOOSE";
+  databaseName: string;
+  maskedUri: string;
+  message: string;
+  error?: string;
+  counts?: {
+    bookings: number;
+    auditLogs: number;
+  };
+}
+
 export interface ToastNotification {
   id: string;
   title: string;
@@ -18,6 +31,7 @@ interface AgentContextType {
   bookings: Booking[];
   auditLogs: AuditLog[];
   stats: BusinessStats | null;
+  dbStatus: DbStatusState | null;
   isLoading: boolean;
   activeView: "customer" | "admin";
   setActiveView: (view: "customer" | "admin") => void;
@@ -43,6 +57,7 @@ interface AgentContextType {
   cancelBooking: (id: string, reason?: string) => Promise<Booking | null>;
   runCommand: (commandText: string) => Promise<{ parsed: ParsedCommand; success: boolean }>;
   resetToDefault: () => void;
+  refreshData: () => Promise<void>;
 
   // Toasts
   toasts: ToastNotification[];
@@ -56,6 +71,7 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [stats, setStats] = useState<BusinessStats | null>(null);
+  const [dbStatus, setDbStatus] = useState<DbStatusState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeView, setActiveView] = useState<"customer" | "admin">("customer");
 
@@ -90,25 +106,49 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Synchronize state from mockMongo
+  // Fetch from live /api/ routes with fallback to local mockMongo
   const refreshData = useCallback(async () => {
     try {
-      const [allBookings, allLogs, curStats] = await Promise.all([
-        mockMongo.Booking.find(),
-        mockMongo.AuditLog.find(),
-        mockMongo.getBusinessStats(),
-      ]);
-      setBookings(allBookings);
-      setAuditLogs(allLogs);
-      setStats(curStats);
+      // 1. Fetch bookings from /api/bookings
+      const bookingsRes = await fetch("/api/bookings").then((r) => r.json()).catch(() => null);
+      if (bookingsRes?.success && Array.isArray(bookingsRes.data)) {
+        setBookings(bookingsRes.data);
+      } else {
+        const localBookings = await mockMongo.Booking.find();
+        setBookings(localBookings);
+      }
+
+      // 2. Fetch audit logs from /api/audit-logs
+      const logsRes = await fetch("/api/audit-logs").then((r) => r.json()).catch(() => null);
+      if (logsRes?.success && Array.isArray(logsRes.data)) {
+        setAuditLogs(logsRes.data);
+      } else {
+        const localLogs = await mockMongo.AuditLog.find();
+        setAuditLogs(localLogs);
+      }
+
+      // 3. Fetch stats from /api/stats
+      const statsRes = await fetch("/api/stats").then((r) => r.json()).catch(() => null);
+      if (statsRes?.success && statsRes.data) {
+        setStats(statsRes.data);
+      } else {
+        const localStats = await mockMongo.getBusinessStats();
+        setStats(localStats);
+      }
+
+      // 4. Fetch database status from /api/db-status
+      const dbStatusRes = await fetch("/api/db-status").then((r) => r.json()).catch(() => null);
+      if (dbStatusRes?.success && dbStatusRes.data) {
+        setDbStatus(dbStatusRes.data);
+      }
     } catch (err) {
-      console.error("Error refreshing mockMongo data:", err);
+      console.error("Error refreshing backend data:", err);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Subscribe to mockMongo events
+  // Initial load and periodic subscription
   useEffect(() => {
     refreshData();
     const unsubscribe = mockMongo.subscribe(() => {
@@ -117,34 +157,32 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [refreshData]);
 
-  // Create booking
+  // Create booking via /api/bookings
   const createBooking = async (data: Partial<Booking>): Promise<Booking> => {
-    const created = await mockMongo.Booking.create(data);
-
-    // Record autonomous AI audit log
-    await mockMongo.AuditLog.create({
-      userCommand: `Command confirmed: Book ${created.serviceType} for ${created.clientName}`,
-      intentDetected: "BOOK_SLOT",
-      agentInvolved: created.agentAssigned || "Nova",
-      actionsTaken: [
-        `Agent Nova verified client slot reservation: ${created.date} at ${created.timeSlot}`,
-        `Agent Atlas updated calendar allocation table in MongoDB`,
-        `Persisted document ID: ${created._id}`,
-      ],
-      dbOperation: "INSERT",
-      targetId: created._id,
-      status: "SUCCESS",
-      confidenceScore: 0.99,
-    });
+    let created: Booking;
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        created = json.data;
+      } else {
+        created = await mockMongo.Booking.create(data);
+      }
+    } catch {
+      created = await mockMongo.Booking.create(data);
+    }
 
     addToast(
       "Slot Confirmed & Registered!",
-      `Agent Nova successfully confirmed your appointment for ${created.date} at ${created.timeSlot}.`,
+      `Agent Nova registered session for ${created.date} at ${created.timeSlot}.`,
       "success",
       "Nova"
     );
 
-    // Trigger celebration confetti
     try {
       confetti({
         particleCount: 80,
@@ -156,91 +194,115 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
       // ignore
     }
 
+    await refreshData();
     return created;
   };
 
-  // Postpone booking
+  // Postpone booking via /api/bookings/:id
   const postponeBooking = async (
     id: string,
     newDate: string,
     newTime?: string
   ): Promise<Booking | null> => {
-    const existing = await mockMongo.Booking.findById(id);
-    if (!existing) return null;
-
-    const oldDate = existing.date;
-    const updated = await mockMongo.Booking.findByIdAndUpdate(id, {
-      date: newDate,
-      timeSlot: newTime || existing.timeSlot,
-      status: "RESCHEDULED",
-      rescheduledFrom: oldDate,
-    });
-
-    await mockMongo.AuditLog.create({
-      userCommand: `Postpone command executed for ${existing.clientName}`,
-      intentDetected: "POSTPONE_BOOKING",
-      agentInvolved: "Atlas",
-      actionsTaken: [
-        `Agent Atlas validated new slot: ${newDate}`,
-        `MongoDB updateOne executed: date modified from ${oldDate} to ${newDate}`,
-        `Dispatched calendar ledger sync to dynamic dashboard`,
-      ],
-      dbOperation: "UPDATE",
-      targetId: id,
-      status: "SUCCESS",
-      confidenceScore: 0.98,
-    });
+    let updated: Booking | null = null;
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: newDate,
+          timeSlot: newTime,
+          status: "RESCHEDULED",
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        updated = json.data;
+      } else {
+        updated = await mockMongo.Booking.findByIdAndUpdate(id, {
+          date: newDate,
+          timeSlot: newTime,
+          status: "RESCHEDULED",
+        });
+      }
+    } catch {
+      updated = await mockMongo.Booking.findByIdAndUpdate(id, {
+        date: newDate,
+        timeSlot: newTime,
+        status: "RESCHEDULED",
+      });
+    }
 
     addToast(
       "Booking Postponed Successfully!",
-      `Agent Atlas updated your session to ${newDate} at ${newTime || existing.timeSlot}.`,
+      `Agent Atlas updated schedule to ${newDate} at ${newTime || "specified slot"}.`,
       "success",
       "Atlas"
     );
 
+    await refreshData();
     return updated;
   };
 
-  // Cancel booking
+  // Cancel booking via /api/bookings/:id
   const cancelBooking = async (id: string, reason?: string): Promise<Booking | null> => {
-    const existing = await mockMongo.Booking.findById(id);
-    if (!existing) return null;
-
-    const updated = await mockMongo.Booking.findByIdAndUpdate(id, {
-      status: "CANCELLED",
-      cancellationReason: reason || "User initiated cancellation via AI Agent",
-    });
-
-    await mockMongo.AuditLog.create({
-      userCommand: `Cancel booking for ${existing.clientName}`,
-      intentDetected: "CANCEL_BOOKING",
-      agentInvolved: "Vera",
-      actionsTaken: [
-        "Agent Vera evaluated cancellation terms: Verified valid policy window",
-        `MongoDB updateOne executed: status changed to 'CANCELLED'`,
-        `Freed calendar time slot ${existing.date} ${existing.timeSlot}`,
-      ],
-      dbOperation: "UPDATE",
-      targetId: id,
-      status: "SUCCESS",
-      confidenceScore: 0.99,
-    });
+    let updated: Booking | null = null;
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "CANCELLED",
+          cancellationReason: reason || "User initiated cancellation via AI Agent",
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        updated = json.data;
+      } else {
+        updated = await mockMongo.Booking.findByIdAndUpdate(id, {
+          status: "CANCELLED",
+          cancellationReason: reason,
+        });
+      }
+    } catch {
+      updated = await mockMongo.Booking.findByIdAndUpdate(id, {
+        status: "CANCELLED",
+        cancellationReason: reason,
+      });
+    }
 
     addToast(
       "Booking Cancelled",
-      `Agent Vera processed the cancellation. The time slot on ${existing.date} has been released.`,
+      "Agent Vera cleared the slot and logged compliance verification.",
       "warning",
       "Vera"
     );
 
+    await refreshData();
     return updated;
   };
 
-  // Run natural language command
+  // Run command via /api/command
   const runCommand = async (
     commandText: string
   ): Promise<{ parsed: ParsedCommand; success: boolean }> => {
-    const parsed = parseUserCommand(commandText, bookings);
+    let parsed: ParsedCommand;
+    try {
+      const res = await fetch("/api/command", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: commandText }),
+      });
+      const json = await res.json();
+      if (json.success && json.parsed) {
+        parsed = json.parsed;
+      } else {
+        parsed = parseUserCommand(commandText, bookings);
+      }
+    } catch {
+      parsed = parseUserCommand(commandText, bookings);
+    }
 
     if (parsed.intent === "BOOK_SLOT") {
       setPendingBooking({
@@ -253,6 +315,7 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
         agentAssigned: "Nova",
       });
       setIsBookModalOpen(true);
+      await refreshData();
       return { parsed, success: true };
     }
 
@@ -260,13 +323,13 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
       const active = bookings.find((b) => b.status === "CONFIRMED") || bookings[0];
       if (active) {
         if (parsed.date) {
-          // Direct update
           await postponeBooking(active._id, parsed.date, parsed.timeSlot);
         } else {
           setBookingToPostpone(active);
           setIsPostponeModalOpen(true);
         }
       }
+      await refreshData();
       return { parsed, success: true };
     }
 
@@ -278,15 +341,18 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
       } else {
         addToast("No Active Booking", "No confirmed bookings found to cancel.", "info", "Vera");
       }
+      await refreshData();
       return { parsed, success: true };
     }
 
+    await refreshData();
     return { parsed, success: true };
   };
 
-  const resetToDefault = () => {
+  const resetToDefault = async () => {
     mockMongo.resetAll();
-    addToast("Database Reset", "Mock MongoDB collections restored to factory seed state.", "info", "Nexus");
+    await refreshData();
+    addToast("Database Reset", "Collections restored to factory seed state.", "info", "Nexus");
   };
 
   return (
@@ -295,6 +361,7 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
         bookings,
         auditLogs,
         stats,
+        dbStatus,
         isLoading,
         activeView,
         setActiveView,
@@ -315,6 +382,7 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
         cancelBooking,
         runCommand,
         resetToDefault,
+        refreshData,
         toasts,
         removeToast,
         addToast,

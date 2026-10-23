@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { mockMongo } from "@/services/mockMongo";
+import { dbAdapter } from "@/services/dbAdapter";
 
 export async function GET() {
   try {
-    const logs = await mockMongo.AuditLog.find();
+    const logs = await dbAdapter.getAuditLogs();
     return NextResponse.json({ success: true, count: logs.length, data: logs });
   } catch (error) {
     return NextResponse.json(
@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const created = await mockMongo.AuditLog.create(body);
+    const created = await dbAdapter.createAuditLog(body);
     return NextResponse.json({ success: true, data: created }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

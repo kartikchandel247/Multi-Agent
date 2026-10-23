@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { mockMongo } from "@/services/mockMongo";
+import { dbAdapter } from "@/services/dbAdapter";
 
 export async function GET(
   _request: Request,
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const booking = await mockMongo.Booking.findById(id);
+    const booking = await dbAdapter.getBookingById(id);
     if (!booking) {
       return NextResponse.json({ success: false, error: "Booking not found" }, { status: 404 });
     }
@@ -27,17 +27,16 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const updated = await mockMongo.Booking.findByIdAndUpdate(id, body, { new: true });
+    const updated = await dbAdapter.updateBooking(id, body);
 
     if (!updated) {
       return NextResponse.json({ success: false, error: "Booking not found" }, { status: 404 });
     }
 
-    // Determine intent for audit trail
     const isPostpone = body.date && body.date !== updated.date;
     const isCancel = body.status === "CANCELLED";
 
-    await mockMongo.AuditLog.create({
+    await dbAdapter.createAuditLog({
       userCommand: `API PUT /api/bookings/${id}: Update received`,
       intentDetected: isCancel ? "CANCEL_BOOKING" : isPostpone ? "POSTPONE_BOOKING" : "BOOK_SLOT",
       agentInvolved: isCancel ? "Vera" : "Atlas",
@@ -67,13 +66,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const deleted = await mockMongo.Booking.findByIdAndDelete(id);
+    const deleted = await dbAdapter.deleteBooking(id);
 
     if (!deleted) {
       return NextResponse.json({ success: false, error: "Booking not found" }, { status: 404 });
     }
 
-    await mockMongo.AuditLog.create({
+    await dbAdapter.createAuditLog({
       userCommand: `API DELETE /api/bookings/${id}`,
       intentDetected: "CANCEL_BOOKING",
       agentInvolved: "Vera",

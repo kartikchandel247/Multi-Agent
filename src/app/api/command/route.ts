@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { mockMongo } from "@/services/mockMongo";
+import { dbAdapter } from "@/services/dbAdapter";
 import { parseUserCommand } from "@/services/commandParser";
 
 export async function POST(request: Request) {
@@ -9,25 +9,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Command is required" }, { status: 400 });
     }
 
-    const currentBookings = await mockMongo.Booking.find();
+    const currentBookings = await dbAdapter.getBookings();
     const parsed = parseUserCommand(command, currentBookings);
 
-    // If intent is POSTPONE and we have target booking, we can execute the update directly
     let executionResult = null;
 
     if (parsed.intent === "POSTPONE_BOOKING" && parsed.bookingId && parsed.date) {
-      const target = await mockMongo.Booking.findById(parsed.bookingId);
+      const target = await dbAdapter.getBookingById(parsed.bookingId);
       if (target) {
         const oldDate = target.date;
-        const updated = await mockMongo.Booking.findByIdAndUpdate(parsed.bookingId, {
+        const updated = await dbAdapter.updateBooking(parsed.bookingId, {
           date: parsed.date,
           timeSlot: parsed.timeSlot || target.timeSlot,
           status: "RESCHEDULED",
           rescheduledFrom: oldDate,
         });
 
-        // Record audit log
-        await mockMongo.AuditLog.create({
+        await dbAdapter.createAuditLog({
           userCommand: command,
           intentDetected: "POSTPONE_BOOKING",
           agentInvolved: "Atlas",
@@ -50,8 +48,7 @@ export async function POST(request: Request) {
         };
       }
     } else {
-      // General command query audit
-      await mockMongo.AuditLog.create({
+      await dbAdapter.createAuditLog({
         userCommand: command,
         intentDetected: parsed.intent,
         agentInvolved: parsed.agent,

@@ -4,10 +4,10 @@ import React from "react";
 import {
   Menu,
   RotateCcw,
-  Sparkles,
-  ShieldCheck,
   Plus,
   Radio,
+  Database,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAgentBooking } from "@/context/AgentContext";
@@ -20,7 +20,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ currentTab, onTabChange, onOpenMobile }: TopbarProps) {
-  const { resetToDefault, setIsBookModalOpen, setPendingBooking } = useAgentBooking();
+  const { resetToDefault, setIsBookModalOpen, setPendingBooking, dbStatus } = useAgentBooking();
 
   const titles: Record<NavTab, { title: string; subtitle: string }> = {
     chat: {
@@ -59,6 +59,8 @@ export function Topbar({ currentTab, onTabChange, onOpenMobile }: TopbarProps) {
     setIsBookModalOpen(true);
   };
 
+  const isLiveMongo = dbStatus?.mode === "REAL_MONGODB";
+
   return (
     <header className="sticky top-0 z-30 w-full bg-white/70 backdrop-blur-xl border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4 transition-all">
       {/* Left: Mobile hamburger & Page Title */}
@@ -87,6 +89,19 @@ export function Topbar({ currentTab, onTabChange, onOpenMobile }: TopbarProps) {
 
       {/* Right: Mode quick switcher & Action buttons */}
       <div className="flex items-center gap-2.5">
+        {/* Live Backend Connection Indicator Pill */}
+        <button
+          onClick={() => onTabChange("database")}
+          className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-white border border-slate-200 shadow-2xs hover:border-blue-400 transition-all cursor-pointer"
+          title={dbStatus?.message || "Checking backend connection..."}
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <Database className="w-3.5 h-3.5 text-slate-500" />
+          <span className="text-slate-700">
+            {isLiveMongo ? "Live MongoDB Atlas" : "Mongoose Engine (Active)"}
+          </span>
+        </button>
+
         {/* Quick View Switcher Pill */}
         <div className="hidden sm:flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
           <button

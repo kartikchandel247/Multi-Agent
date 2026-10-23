@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { mockMongo } from "@/services/mockMongo";
+import { dbAdapter } from "@/services/dbAdapter";
 
 export async function GET() {
   try {
-    const bookings = await mockMongo.Booking.find();
+    const bookings = await dbAdapter.getBookings();
     return NextResponse.json({ success: true, count: bookings.length, data: bookings });
   } catch (error) {
     return NextResponse.json(
@@ -16,10 +16,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const created = await mockMongo.Booking.create(body);
+    const created = await dbAdapter.createBooking(body);
 
     // Record autonomous AI audit log
-    await mockMongo.AuditLog.create({
+    await dbAdapter.createAuditLog({
       userCommand: `API POST /api/bookings: Created booking for ${created.clientName}`,
       intentDetected: "BOOK_SLOT",
       agentInvolved: created.agentAssigned || "Nova",
