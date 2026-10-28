@@ -29,6 +29,26 @@ export const SUPPORTED_CURRENCIES: Record<
 
 const GEO_STORAGE_KEY = "aura_detected_geo_v2";
 
+// Save user's selected location to local storage
+export function saveUserGeoLocation(info: GeoLocationInfo): void {
+  if (typeof window === "undefined") return;
+  try {
+    const updated: GeoLocationInfo = { ...info, source: "manual" };
+    localStorage.setItem(GEO_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.warn("Could not save geo location:", e);
+  }
+}
+
+// Clean administrative suffixes like " district", " tehsil"
+export function cleanLocationName(name: string): string {
+  if (!name) return "";
+  return name
+    .replace(/\s+district$/i, "")
+    .replace(/\s+tehsil$/i, "")
+    .trim();
+}
+
 // Fast synchronous fallback using browser Intl and timezone
 export function detectUserGeoLocation(): GeoLocationInfo {
   if (typeof window === "undefined") {
@@ -60,14 +80,14 @@ export function detectUserGeoLocation(): GeoLocationInfo {
         country: "India",
         countryCode: "IN",
         state: "Punjab",
-        district: "Sahibzada Ajit Singh Nagar district",
+        district: "SAS Nagar",
         city: "Mohali",
         currency: "INR",
         currencySymbol: "₹",
         currencyRateToINR: 1,
         timezone: tz || "Asia/Kolkata",
         source: "browser",
-        fullAddress: "Sahibzada Ajit Singh Nagar district, Punjab, India",
+        fullAddress: "Mohali, Punjab, India",
       };
     }
 
@@ -130,14 +150,14 @@ function getDefaultLocation(): GeoLocationInfo {
     country: "India",
     countryCode: "IN",
     state: "Punjab",
-    district: "Sahibzada Ajit Singh Nagar district",
+    district: "SAS Nagar",
     city: "Mohali",
     currency: "INR",
     currencySymbol: "₹",
     currencyRateToINR: 1,
     timezone: "Asia/Kolkata",
     source: "browser",
-    fullAddress: "Sahibzada Ajit Singh Nagar district, Punjab, India",
+    fullAddress: "Mohali, Punjab, India",
   };
 }
 
@@ -172,15 +192,19 @@ async function reverseGeocodeCoords(lat: number, lon: number): Promise<Partial<G
   try {
     const res = await fetch(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
-      { signal: AbortSignal.timeout(3500) }
+      { signal: AbortSignal.timeout(6000) }
     );
     if (res.ok) {
       const data = await res.json();
       const countryName = data.countryName || "India";
       const countryCode = data.countryCode || "IN";
-      const stateName = data.principalSubdivision || "Punjab";
-      const cityName = data.locality || data.city || data.localityInfo?.administrative?.[3]?.name || "Mohali";
-      const districtName = data.localityInfo?.administrative?.[2]?.name || cityName;
+      const stateName = cleanLocationName(data.principalSubdivision || "Punjab");
+      let cityName = cleanLocationName(data.locality || data.city || data.localityInfo?.administrative?.[3]?.name || "");
+      let districtName = cleanLocationName(data.localityInfo?.administrative?.[2]?.name || cityName);
+
+      if (!cityName && districtName) cityName = districtName;
+      if (!districtName && cityName) districtName = cityName;
+
       const curr = getCurrencyForCountry(countryCode);
 
       return {
@@ -194,7 +218,7 @@ async function reverseGeocodeCoords(lat: number, lon: number): Promise<Partial<G
         currencySymbol: curr.symbol,
         currencyRateToINR: curr.rateToINR,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata",
-        fullAddress: `${cityName}, ${districtName}, ${stateName}, ${countryName}`,
+        fullAddress: `${cityName || districtName}, ${stateName}, ${countryName}`,
       };
     }
   } catch (e) {
@@ -203,13 +227,97 @@ async function reverseGeocodeCoords(lat: number, lon: number): Promise<Partial<G
   return null;
 }
 
+export interface PreciseLocationResult {
+  success: boolean;
+  data?: GeoLocationInfo;
+  error?: string;
+  errorCode?: "PERMISSION_DENIED" | "POSITION_UNAVAILABLE" | "TIMEOUT" | "NOT_SUPPORTED";
+}
+
+// High-precision browser location prompt with explicit Chrome error reporting
+export async function requestPreciseBrowserLocation(): Promise<PreciseLocationResult> {
+  if (typeof window === "undefined" || !("geolocation" in navigator)) {
+    return {
+      success: false,
+      error: "Geolocation is not supported by your browser.",
+      errorCode: "NOT_SUPPORTED",
+    };
+  }
+
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const rev = await reverseGeocodeCoords(latitude, longitude);
+          if (rev && rev.country) {
+            const finalGeo: GeoLocationInfo = {
+              ...(rev as GeoLocationInfo),
+              source: "gps",
+            };
+            try {
+              localStorage.setItem(GEO_STORAGE_KEY, JSON.stringify(finalGeo));
+            } catch {}
+            resolve({ success: true, data: finalGeo });
+            return;
+          }
+          resolve({
+            success: false,
+            error: "Received GPS coordinates, but could not resolve address names.",
+            errorCode: "POSITION_UNAVAILABLE",
+          });
+        } catch (err: any) {
+          resolve({
+            success: false,
+            error: err?.message || "Geocoding error",
+            errorCode: "POSITION_UNAVAILABLE",
+          });
+        }
+      },
+      (error) => {
+        let errorMsg = "Unable to retrieve physical GPS coordinates.";
+        let errCode: PreciseLocationResult["errorCode"] = "POSITION_UNAVAILABLE";
+
+        if (error.code === 1) {
+          errorMsg = "Chrome Location permission was denied. Click the tune/lock icon next to http://localhost:3000 in your address bar and set Location to 'Allow'.";
+          errCode = "PERMISSION_DENIED";
+        } else if (error.code === 2) {
+          errorMsg = "Physical location unavailable. Ensure 'Location Services' and 'Let desktop apps access your location' are turned ON in Windows Settings.";
+          errCode = "POSITION_UNAVAILABLE";
+        } else if (error.code === 3) {
+          errorMsg = "Location request timed out. Your device took too long to acquire a GPS/Wi-Fi fix.";
+          errCode = "TIMEOUT";
+        }
+        resolve({ success: false, error: errorMsg, errorCode: errCode });
+      },
+      {
+        timeout: 10000,
+        enableHighAccuracy: true,
+        maximumAge: 0,
+      }
+    );
+  });
+}
+
 // REAL LIVE AUTO-DETECTION: Runs automatically without requiring manual clicks
-export async function fetchLiveGeoLocation(useGpsIfAllowed = true): Promise<GeoLocationInfo> {
+export async function fetchLiveGeoLocation(useGpsIfAllowed = true, force = false): Promise<GeoLocationInfo> {
+  if (typeof window !== "undefined" && !force) {
+    try {
+      const saved = localStorage.getItem(GEO_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.source === "manual") {
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+
   // 1. Fast, highly-accurate IP Geolocation (Zero permission prompts, resolves immediately)
   const ipDetectionPromise = (async (): Promise<GeoLocationInfo | null> => {
     // Provider A: freeipapi.com
     try {
-      const res = await fetch("https://freeipapi.com/api/json", { signal: AbortSignal.timeout(3000) });
+      const res = await fetch("https://freeipapi.com/api/json", { signal: AbortSignal.timeout(4000) });
       if (res.ok) {
         const ipData = await res.json();
         if (ipData && ipData.latitude && ipData.longitude) {
@@ -226,7 +334,7 @@ export async function fetchLiveGeoLocation(useGpsIfAllowed = true): Promise<GeoL
 
     // Provider B: ipwho.is (Robust fallback)
     try {
-      const res = await fetch("https://ipwho.is/", { signal: AbortSignal.timeout(3000) });
+      const res = await fetch("https://ipwho.is/", { signal: AbortSignal.timeout(4000) });
       if (res.ok) {
         const ipData = await res.json();
         if (ipData && ipData.latitude && ipData.longitude) {
@@ -238,19 +346,21 @@ export async function fetchLiveGeoLocation(useGpsIfAllowed = true): Promise<GeoL
             };
           }
           const curr = getCurrencyForCountry(ipData.country_code || "IN");
+          const cName = cleanLocationName(ipData.city || "Mohali");
+          const rName = cleanLocationName(ipData.region || "Punjab");
           return {
             country: ipData.country || "India",
             countryCode: ipData.country_code || "IN",
-            state: ipData.region || "Punjab",
-            district: ipData.city || "Mohali",
-            city: ipData.city || "Mohali",
+            state: rName,
+            district: cName,
+            city: cName,
             pincode: ipData.postal || "",
             currency: curr.currency,
             currencySymbol: curr.symbol,
             currencyRateToINR: curr.rateToINR,
             timezone: ipData.timezone?.id || "Asia/Kolkata",
             source: "ip",
-            fullAddress: `${ipData.city || ""}, ${ipData.region || ""}, ${ipData.country || ""}`,
+            fullAddress: `${cName}, ${rName}, ${ipData.country || ""}`,
           };
         }
       }
@@ -264,23 +374,10 @@ export async function fetchLiveGeoLocation(useGpsIfAllowed = true): Promise<GeoL
     if (!useGpsIfAllowed || typeof window === "undefined" || !("geolocation" in navigator)) {
       return null;
     }
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 4500,
-          maximumAge: 300000,
-          enableHighAccuracy: true,
-        });
-      });
-      const { latitude, longitude } = position.coords;
-      const rev = await reverseGeocodeCoords(latitude, longitude);
-      if (rev) {
-        return {
-          ...(rev as GeoLocationInfo),
-          source: "gps",
-        };
-      }
-    } catch {}
+    const res = await requestPreciseBrowserLocation();
+    if (res.success && res.data) {
+      return res.data;
+    }
     return null;
   })();
 

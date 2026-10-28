@@ -39,6 +39,9 @@ import {
 import {
   detectUserGeoLocation,
   fetchLiveGeoLocation,
+  saveUserGeoLocation,
+  requestPreciseBrowserLocation,
+  cleanLocationName,
   formatCurrency,
   SUPPORTED_CURRENCIES,
   GeoLocationInfo,
@@ -115,6 +118,7 @@ export function AiTravelChat({ onOpenMobile }: AiTravelChatProps) {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [detectSuccessMessage, setDetectSuccessMessage] = useState<string | null>(null);
+  const [detectErrorMessage, setDetectErrorMessage] = useState<string | null>(null);
 
   // Confirmed bookings ledger (strictly live, user-generated records)
   const [myBookings, setMyBookings] = useState<ConfirmedBookingRecord[]>([]);
@@ -187,17 +191,38 @@ export function AiTravelChat({ onOpenMobile }: AiTravelChatProps) {
   const handleAutoDetectLiveLocation = async () => {
     setIsDetectingLocation(true);
     setDetectSuccessMessage(null);
+    setDetectErrorMessage(null);
     try {
-      const live = await fetchLiveGeoLocation(true);
+      // 1. Try high-precision device GPS first
+      const gpsRes = await requestPreciseBrowserLocation();
+      if (gpsRes.success && gpsRes.data) {
+        setGeoInfo(gpsRes.data);
+        saveUserGeoLocation(gpsRes.data);
+        const cityLabel = cleanLocationName(gpsRes.data.city || gpsRes.data.district || "");
+        const stateLabel = cleanLocationName(gpsRes.data.state || "");
+        setDetectSuccessMessage(`✓ Precise GPS Live Location: ${cityLabel}, ${stateLabel}`);
+        setTimeout(() => setDetectSuccessMessage(null), 6000);
+        return;
+      }
+
+      // If GPS was blocked by Chrome permissions or unavailable, report clear help
+      if (gpsRes.error) {
+        setDetectErrorMessage(gpsRes.error);
+      }
+
+      // 2. Fallback to fresh IP-based detection
+      const live = await fetchLiveGeoLocation(false, true);
       if (live) {
         setGeoInfo(live);
-        setDetectSuccessMessage(
-          `✓ Location detected: ${live.fullAddress || `${live.city || live.district}, ${live.state}`}`
-        );
-        setTimeout(() => setDetectSuccessMessage(null), 5000);
+        saveUserGeoLocation(live);
+        const cityLabel = cleanLocationName(live.city || live.district || "");
+        const stateLabel = cleanLocationName(live.state || "");
+        setDetectSuccessMessage(`✓ Auto-detected via Network IP: ${cityLabel}, ${stateLabel}`);
+        setTimeout(() => setDetectSuccessMessage(null), 6000);
       }
     } catch (e) {
       console.warn("Location detection error:", e);
+      setDetectErrorMessage("Failed to acquire live location. You can manually enter your city/state below.");
     } finally {
       setIsDetectingLocation(false);
     }
@@ -452,7 +477,7 @@ export function AiTravelChat({ onOpenMobile }: AiTravelChatProps) {
           >
             <MapPin className={`w-3.5 h-3.5 ${isDetectingLocation ? "text-amber-500 animate-pulse" : "text-rose-500"}`} />
             <span>
-              {geoInfo.district || geoInfo.city}, {geoInfo.state}
+              {cleanLocationName(geoInfo.city || geoInfo.district || "India")}, {cleanLocationName(geoInfo.state || "")}
             </span>
             <span className="text-slate-300">•</span>
             <span className="text-indigo-600">{geoInfo.currency} ({geoInfo.currencySymbol})</span>
@@ -1041,6 +1066,17 @@ export function AiTravelChat({ onOpenMobile }: AiTravelChatProps) {
                 </div>
               )}
 
+              {detectErrorMessage && (
+                <div className="mt-2.5 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-[11px] font-medium text-amber-900 space-y-1">
+                  <p className="font-bold flex items-center gap-1.5 text-amber-800">
+                    <span>⚠️ GPS Location Access Notice:</span>
+                  </p>
+                  <p className="text-[10px] leading-relaxed text-amber-800/90">
+                    {detectErrorMessage}
+                  </p>
+                </div>
+              )}
+
               {geoInfo.fullAddress && (
                 <p className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
                   <Radio className="w-2.5 h-2.5 text-emerald-500 animate-pulse shrink-0" />
@@ -1142,10 +1178,13 @@ export function AiTravelChat({ onOpenMobile }: AiTravelChatProps) {
             </div>
 
             <button
-              onClick={() => setIsLocationModalOpen(false)}
-              className="mt-5 w-full py-2.5 rounded-2xl bg-indigo-600 text-white font-bold text-sm cursor-pointer"
+              onClick={() => {
+                saveUserGeoLocation(geoInfo);
+                setIsLocationModalOpen(false);
+              }}
+              className="mt-5 w-full py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm cursor-pointer shadow-md shadow-indigo-500/20 transition-all"
             >
-              Apply Settings
+              Save & Apply Location Settings
             </button>
           </div>
         </div>
