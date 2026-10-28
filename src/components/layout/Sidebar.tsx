@@ -6,19 +6,16 @@ import {
   LayoutDashboard,
   CalendarDays,
   FileClock,
-  SlidersHorizontal,
-  Sparkles,
-  Bot,
-  ShieldCheck,
-  Cpu,
   ChevronRight,
   Zap,
+  LogOut,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAgentBooking } from "@/context/AgentContext";
+import { useAuth } from "@/context/AuthContext";
 import { clsx } from "clsx";
 
-export type NavTab = "chat" | "dashboard" | "calendar" | "audit" | "database";
+export type NavTab = "chat" | "dashboard" | "calendar" | "audit";
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -29,44 +26,32 @@ interface SidebarProps {
 
 export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }: SidebarProps) {
   const { bookings, stats } = useAgentBooking();
+  const { user, logout } = useAuth();
 
   const navItems: { id: NavTab; label: string; icon: React.ReactNode; badge?: string | number }[] = [
     {
       id: "chat",
-      label: "AI Command Chat",
+      label: "AI Travel Chat",
       icon: <MessageSquareCode className="w-4 h-4" />,
-      badge: "Customer",
+      badge: "ChatGPT/Gemini",
     },
     {
       id: "dashboard",
-      label: "Overview Bento",
+      label: "My Trips & Ledger",
       icon: <LayoutDashboard className="w-4 h-4" />,
       badge: stats ? `${stats.totalBookings}` : undefined,
     },
     {
       id: "calendar",
-      label: "Dynamic Calendar",
+      label: "Live Schedule",
       icon: <CalendarDays className="w-4 h-4" />,
-      badge: `${bookings.filter((b) => b.status === "CONFIRMED").length} Live`,
+      badge: `${bookings.filter((b) => b.status === "CONFIRMED").length} Active`,
     },
     {
       id: "audit",
-      label: "AI Audit Log",
+      label: "Booking Audit Trail",
       icon: <FileClock className="w-4 h-4" />,
     },
-    {
-      id: "database",
-      label: "Settings & API Keys",
-      icon: <SlidersHorizontal className="w-4 h-4" />,
-      badge: "Config",
-    },
-  ];
-
-  const agents = [
-    { name: "Nova", role: "Front-Desk AI", icon: <Sparkles className="w-3.5 h-3.5 text-blue-500" /> },
-    { name: "Atlas", role: "Calendar Engine", icon: <Cpu className="w-3.5 h-3.5 text-emerald-500" /> },
-    { name: "Vera", role: "Compliance Guardian", icon: <ShieldCheck className="w-3.5 h-3.5 text-purple-500" /> },
-    { name: "Nexus", role: "Business Analytics", icon: <Bot className="w-3.5 h-3.5 text-amber-500" /> },
   ];
 
   return (
@@ -147,36 +132,30 @@ export function Sidebar({ currentTab, onTabChange, isOpenMobile, onCloseMobile }
           </div>
         </div>
 
-        {/* Multi-Agent Constellation Card */}
+        {/* Bottom Section: User Session & System Status */}
         <div className="pt-4 border-t border-white/60 space-y-3.5">
-          <div className="rounded-2xl p-3.5 bg-white/40 backdrop-blur-xl border border-white/70 shadow-[0_4px_15px_rgba(0,0,0,0.02)]">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                Autonomous Agents
-              </span>
-              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100/70 border border-emerald-300/50 px-2 py-0.5 rounded-full">
-                4 Online
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {agents.map((ag) => (
-                <div
-                  key={ag.name}
-                  className="p-2 rounded-xl bg-white/60 backdrop-blur-md border border-white/80 flex items-center gap-2 shadow-2xs hover:bg-white/80 transition-all cursor-default"
-                >
-                  <div className="shrink-0">{ag.icon}</div>
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-slate-800 leading-tight truncate">
-                      {ag.name}
-                    </p>
-                    <p className="text-[9px] text-slate-400 font-medium truncate">{ag.role}</p>
-                  </div>
+          {/* User Session Quick Profile & Sign Out */}
+          {user && (
+            <div className="p-2.5 rounded-2xl bg-white/45 backdrop-blur-xl border border-white/80 flex items-center justify-between gap-2 shadow-2xs">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-[10px] font-extrabold shrink-0 shadow-2xs">
+                  {user.avatarInitials}
                 </div>
-              ))}
+                <div className="overflow-hidden">
+                  <p className="text-xs font-bold text-slate-800 truncate">{user.name}</p>
+                  <p className="text-[10px] text-slate-400 font-medium truncate">{user.role}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={logout}
+                title="Sign Out"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shrink-0"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
-          </div>
+          )}
 
           {/* Clean system status footer */}
           <div className="px-2 flex items-center justify-between text-[11px] text-slate-400 font-medium">

@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AgentBadge } from "@/components/ui/Badge";
 import { useAgentBooking } from "@/context/AgentContext";
+import { useAuth } from "@/context/AuthContext";
 import { User, Mail, Sparkles, Check } from "lucide-react";
 
 export function BookingConfirmModal() {
+  const { user } = useAuth();
   const { isBookModalOpen, setIsBookModalOpen, pendingBooking, createBooking } = useAgentBooking();
 
   const [clientName, setClientName] = useState("");
@@ -21,14 +23,17 @@ export function BookingConfirmModal() {
 
   useEffect(() => {
     if (pendingBooking) {
-      setClientName(pendingBooking.clientName || "Alex Morgan");
-      setClientEmail(pendingBooking.clientEmail || "alex.morgan@client.com");
+      setClientName(pendingBooking.clientName || user?.name || "");
+      setClientEmail(pendingBooking.clientEmail || user?.email || "");
       setServiceType(pendingBooking.serviceType || "AI Strategy Consult");
       setDate(pendingBooking.date || new Date().toISOString().split("T")[0]);
       setTimeSlot(pendingBooking.timeSlot || "10:00 AM");
       setNotes(pendingBooking.notes || "Autonomous reservation via multi-agent command.");
+    } else if (user) {
+      setClientName(user.name || "");
+      setClientEmail(user.email || "");
     }
-  }, [pendingBooking]);
+  }, [pendingBooking, user]);
 
   const timeOptions = [
     "09:00 AM",
@@ -159,7 +164,7 @@ export function BookingConfirmModal() {
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             leftIcon={<User className="w-4 h-4" />}
-            placeholder="e.g. Elena Rostova"
+            placeholder="Your full name"
           />
           <Input
             label="Work Email"
@@ -168,7 +173,7 @@ export function BookingConfirmModal() {
             value={clientEmail}
             onChange={(e) => setClientEmail(e.target.value)}
             leftIcon={<Mail className="w-4 h-4" />}
-            placeholder="e.g. elena@vanguardai.tech"
+            placeholder="name@example.com"
           />
         </div>
 

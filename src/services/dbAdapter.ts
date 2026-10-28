@@ -186,18 +186,32 @@ export class DatabaseAdapter {
     const successRate = totalCount > 0 ? Math.round(((totalCount - cancelled.length) / totalCount) * 100) : 100;
 
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const weeklyTrend = days.map((day, idx) => ({
-      day,
-      bookings: 2 + (idx % 4) + (idx === 3 ? 3 : 0),
-      revenue: (2 + (idx % 4) + (idx === 3 ? 3 : 0)) * 650,
-    }));
+    const weeklyTrend = days.map((dayName) => {
+      const dayBookings = allBookings.filter((b) => {
+        try {
+          const d = new Date(b.date);
+          if (isNaN(d.getTime())) return false;
+          return d.toLocaleDateString("en-US", { weekday: "short" }) === dayName;
+        } catch {
+          return false;
+        }
+      });
+      const dayRev = dayBookings
+        .filter((b) => b.status === "CONFIRMED")
+        .reduce((sum, b) => sum + (b.amount || 0), 0);
+      return {
+        day: dayName,
+        bookings: dayBookings.length,
+        revenue: dayRev,
+      };
+    });
 
     return {
       totalBookings: allBookings.length,
-      activeAiSessions: 4,
+      activeAiSessions: 3, // Nova, Atlas, Vera live agent mesh
       revenue: totalRevenue,
       successRate,
-      capacityUtilization: Math.min(94, 60 + confirmed.length * 5),
+      capacityUtilization: totalCount > 0 ? Math.min(100, Math.round((confirmed.length / totalCount) * 100)) : 0,
       cancelledBookings: cancelled.length,
       rescheduledBookings: rescheduled.length,
       weeklyTrend,

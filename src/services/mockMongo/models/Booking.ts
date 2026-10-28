@@ -96,8 +96,8 @@ export class MockBookingModel {
     const now = new Date().toISOString();
     const newDoc: Booking = {
       _id: payload._id || generateObjectId(),
-      clientName: payload.clientName || "Alex Morgan",
-      clientEmail: payload.clientEmail || "alex.morgan@client.com",
+      clientName: payload.clientName || "User",
+      clientEmail: payload.clientEmail || "user@auraagent.ai",
       serviceType: payload.serviceType || "AI Strategy Consult",
       date: payload.date || now.split("T")[0],
       timeSlot: payload.timeSlot || "11:00 AM",

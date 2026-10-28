@@ -306,8 +306,8 @@ export function AgentProvider({ children }: { children: React.ReactNode }) {
 
     if (parsed.intent === "BOOK_SLOT") {
       setPendingBooking({
-        clientName: parsed.clientName || "Alex Morgan",
-        clientEmail: "alex.morgan@client.com",
+        clientName: parsed.clientName || "User",
+        clientEmail: "user@auraagent.ai",
         serviceType: parsed.service || "AI Strategy Consult",
         date: parsed.date || new Date().toISOString().split("T")[0],
         timeSlot: parsed.timeSlot || "10:00 AM",

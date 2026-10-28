@@ -1,0 +1,18 @@
+{
+  "GEMINI_API_KEY": "",
+  "PROVIDER": "Google Gemini (100% Free Tier via Google AI Studio)",
+  "MODEL": "gemini-2.0-flash",
+  "FREE_TIER_BENEFITS": {
+    "cost": "100% Free / Zero Cost",
+    "rate_limit": "15 requests per minute at zero cost",
+    "credit_card_needed": false
+  },
+  "HOW_TO_GET_FREE_API_KEY": [
+    "Step 1: Open https://aistudio.google.com/app/apikey in your browser",
+    "Step 2: Sign in with any regular Google / Gmail account",
+    "Step 3: Click the blue 'Create API key' button",
+    "Step 4: Copy your key (starts with AIzaSy...)",
+    "Step 5: Paste it above between the quotes in GEMINI_API_KEY: \"AIzaSy...\" and save this file"
+  ],
+  "ALTERNATIVE_CONFIG": "You can also paste this key in your .env file as GEMINI_API_KEY=AIzaSy... or enter it directly in the top-right '⚡ AI Key' button in the chat interface!"
+}

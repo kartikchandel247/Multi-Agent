@@ -18,20 +18,37 @@ import { AgentBadge } from "@/components/ui/Badge";
 export function OverviewBentoGrid() {
   const { stats, bookings } = useAgentBooking();
 
-  const totalBookings = stats?.totalBookings ?? bookings.length;
-  const activeSessions = stats?.activeAiSessions ?? 4;
-  const revenue = stats?.revenue ?? 4850;
-  const successRate = stats?.successRate ?? 98;
+  const confirmedBookings = bookings.filter((b) => b.status === "CONFIRMED");
+  const cancelledBookings = bookings.filter((b) => b.status === "CANCELLED");
+  const rescheduledBookings = bookings.filter((b) => b.status === "RESCHEDULED");
 
-  const weeklyTrend = stats?.weeklyTrend || [
-    { day: "Mon", bookings: 3, revenue: 1950 },
-    { day: "Tue", bookings: 4, revenue: 2600 },
-    { day: "Wed", bookings: 6, revenue: 3900 },
-    { day: "Thu", bookings: 5, revenue: 3250 },
-    { day: "Fri", bookings: 7, revenue: 4550 },
-    { day: "Sat", bookings: 3, revenue: 1950 },
-    { day: "Sun", bookings: 2, revenue: 1300 },
-  ];
+  const totalBookings = bookings.length;
+  const activeSessions = 3; // Nova, Atlas, Vera live agent swarm
+  const revenue = confirmedBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
+  const successRate = totalBookings > 0
+    ? Math.round(((totalBookings - cancelledBookings.length) / totalBookings) * 100)
+    : 100;
+
+  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const weeklyTrend = daysOfWeek.map((dayName) => {
+    const dayBookings = bookings.filter((b) => {
+      try {
+        const d = new Date(b.date);
+        if (isNaN(d.getTime())) return false;
+        return d.toLocaleDateString("en-US", { weekday: "short" }) === dayName;
+      } catch {
+        return false;
+      }
+    });
+    const dayRevenue = dayBookings
+      .filter((b) => b.status === "CONFIRMED")
+      .reduce((sum, b) => sum + (b.amount || 0), 0);
+    return {
+      day: dayName,
+      bookings: dayBookings.length,
+      revenue: dayRevenue,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -50,7 +67,7 @@ export function OverviewBentoGrid() {
                   className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight"
                 />
                 <span className="inline-flex items-center text-xs font-bold text-emerald-700 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-400/40 backdrop-blur-md">
-                  <ArrowUpRight className="w-3 h-3" /> +18%
+                  <ArrowUpRight className="w-3 h-3" /> Live
                 </span>
               </div>
             </div>
@@ -60,8 +77,8 @@ export function OverviewBentoGrid() {
           </div>
 
           <div className="mt-4 pt-3.5 border-t border-white/60 flex items-center justify-between text-xs text-slate-500 font-medium">
-            <span>Confirmed: {bookings.filter((b) => b.status === "CONFIRMED").length}</span>
-            <span>Rescheduled: {bookings.filter((b) => b.status === "RESCHEDULED").length}</span>
+            <span>Confirmed: {confirmedBookings.length}</span>
+            <span>Rescheduled: {rescheduledBookings.length}</span>
           </div>
         </GlassCard>
 
@@ -115,8 +132,8 @@ export function OverviewBentoGrid() {
           </div>
 
           <div className="mt-4 pt-3.5 border-t border-white/60 flex items-center justify-between text-xs text-slate-500 font-medium">
-            <span>Avg Session: $650</span>
-            <span className="text-emerald-700 font-bold">+24.5% vs last mo</span>
+            <span>Avg Session: ${confirmedBookings.length > 0 ? Math.round(revenue / confirmedBookings.length) : 0}</span>
+            <span className="text-emerald-700 font-bold">{confirmedBookings.length} Active Stays</span>
           </div>
         </GlassCard>
 
@@ -169,8 +186,8 @@ export function OverviewBentoGrid() {
           {/* Frosted bar chart visualization */}
           <div className="pt-4 flex items-end justify-between gap-2.5 h-44 sm:h-48 px-2">
             {weeklyTrend.map((item, idx) => {
-              const maxBookings = 8;
-              const heightPct = Math.min(100, Math.max(20, (item.bookings / maxBookings) * 100));
+              const maxBookings = Math.max(1, ...weeklyTrend.map((w) => w.bookings));
+              const heightPct = item.bookings > 0 ? Math.min(100, Math.max(15, (item.bookings / maxBookings) * 100)) : 6;
 
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
