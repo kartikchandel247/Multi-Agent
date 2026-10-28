@@ -918,7 +918,7 @@ export function AiTravelChat({ onOpenMobile }: AiTravelChatProps) {
               <Luggage className="w-10 h-10 text-slate-300 mx-auto mb-2" />
               <p className="text-sm font-bold text-slate-700">No active bookings yet</p>
               <p className="text-xs text-slate-400 mt-1">
-                Tell the AI: "Book hotel in Manali HP" or "Bus to Bilaspur"
+                Tell the AI: &quot;Book hotel in Manali HP&quot; or &quot;Bus to Bilaspur&quot;
               </p>
             </div>
           ) : (
